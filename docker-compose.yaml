@@ -24,7 +24,7 @@ services:
     command: dgraph alpha --my=core-alpha:7080 --zero=core-zero:5080 --security whitelist=0.0.0.0/0
     restart: on-failure
     networks:
-      - dgraph_network
+      - dgraph_network 
   
   #iam-zero: 
     #image: dgraph/dgraph:latest
