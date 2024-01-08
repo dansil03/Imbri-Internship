@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+
+  core-zero: 
+    image: dgraph/dgraph:latest
+    volumes:
+      - ./dgraph/core-zero:/dgraph
+    ports:
+      - "5080:5080"
+      - "6080:6080"
+    command: dgraph zero --my=core-zero:5080 
+    restart: on-failure
+    networks:
+      - dgraph_network
+
+  core-alpha: 
+    image: dgraph/dgraph:latest
+    volumes:
+      - ./dgraph/core-alpha:/dgraph
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    command: dgraph alpha --my=core-alpha:7080 --zero=core-zero:5080 --security whitelist=0.0.0.0/0
+    restart: on-failure
+    networks:
+      - dgraph_network
+  
+  #iam-zero: 
+    #image: dgraph/dgraph:latest
+    #volumes:
+      #- ./dgraph/iam-zero:/dgraph
+    #ports:
+     # - "5180:5080"
+    #  - "6180:6080"
+   # command: dgraph zero --my=iam-zero:5080
+   # restart: on-failure
+   # networks:
+   #   - dgraph_network
+
+
+ # iam-alpha: 
+   # image: dgraph/dgraph:latest
+  #  volumes:
+   #   - ./dgraph/iam-alpha:/dgraph
+  #  ports:
+  #    - "8180:8080"
+  #    - "9180:9080"
+  #  command: dgraph alpha --my=iam-alpha:7080 --zero=iam-zero:5080 --security whitelist=0.0.0.0/0
+ #   restart: on-failure
+  #  networks:
+ #     - dgraph_network  
+
+ # audit-zero: 
+  #  image: dgraph/dgraph:latest
+ #   volumes:
+ #     - ./dgraph/audit-zero:/dgraph
+ #   ports:
+  #    - "5280:5080"
+ #     - "6280:6080"
+ #   command: dgraph zero --my=audit-zero:5080
+  #  restart: on-failure
+ #   networks:
+   #   - dgraph_network
+
+ # audit-alpha: 
+ #   image: dgraph/dgraph:latest
+  #  volumes:
+  #    - ./dgraph/audit-alpha:/dgraph
+  #  ports:
+   #   - "8280:8080"
+   #   - "9280:9080"
+   # command: dgraph alpha --my=audit-alpha:7080 --zero=audit-zero:5080 --security whitelist=0.0.0.0/0
+   # restart: on-failure
+  #  networks:
+   #   - dgraph_network
+
+  ratel: 
+    image: dgraph/ratel:latest
+    ports:
+      - "8000:8000"
+    restart: on-failure
+    networks:
+      - dgraph_network
+  
+ # MongoDB service toegevoegd
+  mongo:
+    image: mongo
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - dgraph_network
+
+  
+  kafka:
+    image: bitnami/kafka
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server=kafka:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://kafka:29092
+    depends_on:
+      - zookeeper
+    networks: 
+      - dgraph_network
+
+
+  zookeeper:
+    image: bitnami/zookeeper
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks: 
+      - dgraph_network
+
+  producer:
+    build: 
+      context: ./Producer  
+    networks:
+      - dgraph_network  
+    depends_on:
+      - kafka  
+      - core-alpha 
+
+  consumer:
+    build: 
+      context: ./Consumer  
+    networks:
+      - dgraph_network  
+    depends_on:
+      - kafka  
+
+networks:
+  dgraph_network:
+    driver: bridge
+  
+volumes:
+  mongo-data:
