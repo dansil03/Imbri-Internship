@@ -3,6 +3,10 @@
   "kafka_topic": "UltimoData",
   "kafka_consumer_group": "UltimoGroup",
   "dgraph_url": "http://internship-project-core-alpha-1:8080/mutate?commitNow=true",
+  "unique_properties": {
+    "Ticket": "issue_number",
+    "Organization": "organization_name"
+  },
   "api_to_property_mapping": {
     "issue_number": "Code",
     "reported_at": "Melddatum",
