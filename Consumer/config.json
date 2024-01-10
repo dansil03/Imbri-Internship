@@ -1,0 +1,67 @@
+{
+  "kafka_server": "kafka:29092",
+  "kafka_topic": "UltimoData",
+  "kafka_consumer_group": "UltimoGroup",
+  "dgraph_url": "http://internship-project-core-alpha-1:8080/mutate?commitNow=true",
+  "api_to_property_mapping": {
+    "issue_number": "Code",
+    "reported_at": "Melddatum",
+    "due_date": "Gepl. gereeddatum",
+    "closed_at": "Werkelijk gereed",
+    "organization_name": "Gebouw",
+    "email_address": "E-mailadres melder"
+  },
+  "entity_definitions": {
+    "Ticket": {
+      "prefix": "_:Ticket",
+      "properties": {
+        "issue_number": "issue_number",
+        "reported_at": "reported_at",
+        "due_date": "due_date",
+        "closed_at": "closed_at"
+      },
+      "relations": {
+        "Organization": "organization_id"
+      }
+    },
+    "Organization": {
+      "prefix": "_:Org",
+      "properties": {
+        "organization_name": "organization_name"
+      },
+      "relations": { 
+        "Contact": "contact_details"
+      }
+    },
+    "Contact": {
+      "prefix": "_:Contact",
+      "relations": {
+        "Email": "email_address"
+      }
+    }, 
+    "Email": {
+      "prefix": "_:Email",
+      "properties": {
+        "email_address": "email_address"
+      }
+    }
+  },
+  "mappings": {
+    "priority_mapping": {
+      "1": "Critical",
+      "2": "High",
+      "3": "Medium",
+      "4": "Medium",
+      "5": "Low"
+    },
+    "status_mapping": {
+      "Gesloten": "Closed",
+      "Open": "Open"
+    },
+    "attribute_mapping": {
+      "Impact": "impact_value",
+      "Urgentie": "urgency_level",
+      "Vakgroep": "department_group"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 from kafka import KafkaConsumer, KafkaAdminClient
 from kafka.errors import NoBrokersAvailable
+from urllib.parse import quote
 import json
 import uuid
 import logging
@@ -8,6 +9,7 @@ import requests
 import time 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def wait_for_kafka(broker, max_retries=5, wait_time=5):
     """Wait until Kafka is available."""
@@ -26,98 +28,62 @@ def wait_for_kafka(broker, max_retries=5, wait_time=5):
 
 wait_for_kafka('kafka:29092')
 
-def priority_mapping(priority):
-    return {
-        5: "Low",
-        4: "Medium",
-        3: "Medium",
-        2: "High",
-        1: "Critical"
-    }.get(priority, "Unknown")
+with open('config.json') as config_file:
+    config = json.load(config_file)
 
-def status_mapping(status):
-    return {
-        "Gesloten": "Closed",
-        "Open": "Open"
-    }.get(status, "Unknown")
-
-def send_to_dgraph_http(item):
-    existing_uid = item.get('existing_uid') # Verkrijg de UID van het bestaande record (als het bestaat) 
-    if existing_uid: 
-        uid = existing_uid 
-        print('Existing Ticket UID:', uid) 
-    else: 
-        uid = f"_:ticket{uuid.uuid4()}"
-
-    print("Preparing to send data to Dgraph via HTTP...")
-    url = 'http://internship-project-core-alpha-1:8080/mutate?commitNow=true'  # Pas dit aan naar je Dgraph Alpha-adres
-    mutation_data = {
-        "uid": uid,
-        "dgraph.type": "Ticket",
-        "Ticket.organization_id": {
-            "uid": "_:organization1", 
-            "dgraph.type": "Organization", 
-            "Organization.organization_name": item["Gebouw"], 
-            "Organization.organization_type": "Hospital", 
-            "Organization.contact_details": {
-                "uid": "_:contact1", 
-                "dgraph.type": "Contact", 
-                "Contact.email": {
-                    "uid": "_:email1",
-                    "dgraph.type": "Email", 
-                    "Email.email_address": item["E-mailadres melder"] 
-                }, 
-                "Contact.phone": { 
-                    "uid": "_:phone1", 
-                    "dgraph.type": "Phone", 
-                    "Phone.phone_number": item["Telefoon"] 
-                }
-            }
-        },
-        "Ticket.issue_number": item['Code'], 
-        "Ticket.issue_type": item['Incidentsoort'],
-        "Ticket.issue_description": item['Omschrijving'],
-        "Ticket.reported_by": {
-            "username": item['Melder']
-        },
-        "Ticket.reported_at": item['Melddatum'],
-        "Ticket.priority": priority_mapping(int(item['Prioriteit'])),
-        "Ticket.ticket_status": status_mapping(item['Voortgangsstatus']),
-        "Ticket.due_date": item["Gepl. gereeddatum"],
-        "Ticket.closed_at": item["Werkelijk gereed"],
-        "Ticket.resolution": item["Oplossing"],
-        "Ticket.attributes": [
-            {"attribute_name": "Impact", "attribute_value": item['Impact']},
-            {"attribute_name": "Urgentie", "attribute_value": item['Urgentie']},
-            {"attribute_name": "Vakgroep", "attribute_value": item['Vakgroep']},
-        ]
-    }
-
-    mutation = json.dumps({"set": [mutation_data]})
-
-    with open("last_mutation.json", "w") as file:
-        file.write(mutation)
-
-    headers = {'Content-Type': 'application/json'}
+def send_to_dgraph(nquads, dgraph_url):
+    logging.info("Sending N-Quads data to Dgraph...")
+    headers = {'Content-Type': 'application/rdf'}
     try:
-        response = requests.post(url, data=mutation, headers=headers)
-        print(f'Successfully added: {response.text}')
+        response = requests.post(dgraph_url, data=nquads, headers=headers)
+        logging.info(f'Successfully added: {response.text}')
     except Exception as e:
-        print(f"An error occurred while sending data to Dgraph: {e}")
+        logging.error(f"An error occurred while sending data to Dgraph: {e}")
         traceback.print_exc()
 
+def generate_nquad(entity_key, prop, value, entity_id):
+    if 'http://' in value or 'https://' in value:
+        value = f"<{value}>"
+    else:
+        value = f"\"{value}\""
+    return f"{entity_id} <{entity_key}.{prop}> {value} ."
+
+def build_nquads_data(item, config):
+    nquads = []
+    entity_ids = {}
+
+    entity_order = ["Email", "Contact", "Organization", "Ticket"]
+    for entity_key in entity_order:
+        if entity_key in config["entity_definitions"]:
+            entity_config = config["entity_definitions"][entity_key]
+            entity_id = f"_:_{entity_config['prefix']}{uuid.uuid4()}"
+            entity_ids[entity_key] = entity_id
+
+            nquads.append(f"{entity_id} <dgraph.type> \"{entity_key}\" .")
+
+            for prop in entity_config.get("properties", {}).keys():
+                api_field = config["api_to_property_mapping"].get(prop)
+                if api_field in item and item[api_field] is not None:
+                    value = str(item[api_field]).replace("_x000d_", "")
+                    nquads.append(generate_nquad(entity_key, prop, value, entity_id))
+
+            for related_entity_key, relation_predicate in entity_config.get("relations", {}).items():
+                related_entity_id = entity_ids.get(related_entity_key)
+                if related_entity_id:
+                    nquads.append(f"{entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
+
+    return "{ set { " + '\n'.join(nquads) + " } }"
+
 consumer = KafkaConsumer(
-    'UltimoData',
-    bootstrap_servers= 'kafka:29092', #['internship-project-kafka-1:9092'], #['localhost:29092'],
+    config['kafka_topic'],
+    bootstrap_servers=config['kafka_server'],
     auto_offset_reset='earliest',
-    group_id='Ultimo_Group',
+    group_id=config['kafka_consumer_group'],
     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
 )
 
-
-#dgraph_client = None  # Je hebt dit niet meer nodig
-
 for message in consumer:
-    print(f"Received message: {message.value}")
-    send_to_dgraph_http(message.value)  # Gebruik de nieuwe functie
-
+    logging.info(f"Received message: {message.value}")
+    nquads_data = build_nquads_data(message.value, config)
+    logging.info(f"Generated N-Quads Data:\n{nquads_data}")
+    send_to_dgraph(nquads_data, config['dgraph_url'])
