@@ -119,16 +119,46 @@ def generate_nquad(entity_key, prop, value, entity_id):
         value = f"\"{value}\""
     return f"{entity_id} <{entity_key}.{prop}> {value} ."
 
+def apply_mappings(item, config, entity_key):
+    print(f"Applying mappings for entity: {entity_key}")
+    # Retrieve mapping properties for the specific entity from the config
+    mapping_properties = config["mapping_properties"].get(entity_key, [])
+    # Retrieve actual mappings for the specific entity from the config
+    entity_mappings = config["mappings"].get(entity_key, {})
+
+    # Iterate over the list of mapping properties for this entity
+    for map_prop in mapping_properties:
+        # Get the API field corresponding to the mapping property
+        api_field = config["api_to_property_mapping"].get(map_prop)
+        # Check if the API field is in the item
+        if api_field in item:
+            # Get the value from the item for the mapping
+            item_value = str(item[api_field])
+            print(f"Original value for {map_prop} (field {api_field}): {item_value}")
+            # Apply the mapping if it exists
+            if item_value in entity_mappings.get(map_prop, {}):
+                # Replace the item's original value with the mapped value
+                item[api_field] = entity_mappings[map_prop][item_value]
+                print(f"Mapped value for {map_prop}: {item[api_field]}")
+
+    # Return the item with mappings applied
+    return item
+
 def build_nquads_data(item, config, dgraph_query_url):
     nquads = []
     entity_ids = {}
 
     for entity_key in ["Phone", "Email", "Contact","User", "Organization", "Ticket"]:
         if entity_key in config["entity_definitions"]:
+
             print(f"Verwerken van entiteit: {entity_key}")
 
+            print(f"Voor apply_mappings, item: {item}")
+            item = apply_mappings(item, config, entity_key)
+            print(f"Na apply_mappings, item: {item}")
+
             entity_config = config["entity_definitions"][entity_key]
-            unique_property = config["unique_properties"].get(entity_key)
+            unique_property = config["unique_properties"].get(entity_key) 
             unique_value = None
             existing_uid = None
 
