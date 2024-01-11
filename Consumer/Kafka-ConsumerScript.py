@@ -63,6 +63,43 @@ def entity_exists(entity_key, unique_value, dgraph_query_url):
     return None
 
 
+def entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url):
+    entity_config = config["entity_definitions"].get(entity_key, {})
+    match_properties = entity_config.get("match_properties", [])
+
+    if not match_properties:
+        # Geen match-eigenschappen gedefinieerd voor deze entiteit
+        return None
+
+    filters = []
+    for prop in match_properties:
+        if prop in item:
+            value = item[prop]
+            filters.append(f'anyofterms({entity_key}.{prop}, "{value}")')
+
+    if not filters:
+        # Geen overeenkomende data gevonden in het item
+        return None
+
+    filter_query = " @filter(" + " AND ".join(filters) + ")"
+    query = f"""
+    {{
+        entity(func: has({entity_key}.{match_properties[0]})){filter_query} {{
+            uid
+        }}
+    }}
+    """
+
+    response = requests.post(dgraph_query_url, json={'query': query}, headers={'Content-Type': 'application/json'})
+    if response.status_code == 200:
+        result = response.json()
+        entities = result.get('data', {}).get('entity', [])
+        if entities:
+            return entities[0]['uid']
+    return None
+
+
+
 
 
 def send_to_dgraph(nquads, dgraph_url):
@@ -86,62 +123,59 @@ def build_nquads_data(item, config, dgraph_query_url):
     nquads = []
     entity_ids = {}
 
-    for entity_key in ["Email", "Contact", "Organization", "Ticket"]:
+    for entity_key in ["Phone", "Email", "Contact","User", "Organization", "Ticket"]:
         if entity_key in config["entity_definitions"]:
             print(f"Verwerken van entiteit: {entity_key}")
 
             entity_config = config["entity_definitions"][entity_key]
             unique_property = config["unique_properties"].get(entity_key)
             unique_value = None
+            existing_uid = None
 
             if unique_property:
                 unique_value = item.get(config["api_to_property_mapping"].get(unique_property))
                 print(f"Unieke waarde voor {entity_key}: {unique_value}")
 
                 if unique_value is not None:
-                    # Zoek naar bestaande UID
                     existing_uid = entity_exists(entity_key, unique_value, dgraph_query_url)
                     print(f"Bestaande entity_id voor {entity_key}: {existing_uid}")
-                    if existing_uid:
-                        # Gebruik bestaande UID met juiste syntax
-                        entity_id = f"<{existing_uid}>"
-                    else:
-                        # Genereer nieuwe blank node
-                        entity_id = "_:_" + entity_config['prefix'] + str(uuid.uuid4())
-                        print(f"Nieuwe entity_id gegenereerd voor {entity_key}: {entity_id}")
-                else:
-                    # Geen unieke waarde gevonden
-                    entity_id = None
-                    print(f"Geen unieke waarde gevonden voor {entity_key}")
             else:
-                # Geen unieke eigenschap gedefinieerd
-                entity_id = None
-                print(f"Geen unieke eigenschap gedefinieerd voor {entity_key}")
+                # Voor entiteiten zonder unieke eigenschap
+                properties_to_check = entity_config.get("properties_to_check", [])
+                existing_uid = entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url)
 
-            if entity_id:
-                entity_ids[entity_key] = entity_id
+            if not existing_uid:
+                # Genereer nieuwe blank node
+                entity_id = "_:_" + entity_config['prefix'] + str(uuid.uuid4())
+                print(f"Nieuwe entity_id gegenereerd voor {entity_key}: {entity_id}")
+            else:
+                # Gebruik bestaande UID met juiste syntax
+                entity_id = f"<{existing_uid}>"
 
-                if not existing_uid:
-                    # Voeg dgraph.type alleen toe voor nieuwe entiteiten
-                    nquads.append(f"{entity_id} <dgraph.type> \"{entity_key}\" .")
+            entity_ids[entity_key] = entity_id
 
-                for prop in entity_config.get("properties", {}).keys():
-                    api_field = config["api_to_property_mapping"].get(prop)
-                    if api_field in item and item[api_field] is not None:
-                        value = str(item[api_field]).replace("_x000d_", "").replace("\"", "\\\"")
-                        nquads.append(f"{entity_id} <{entity_key}.{prop}> \"{value}\" .")
+            if not existing_uid:
+                # Voeg dgraph.type alleen toe voor nieuwe entiteiten
+                nquads.append(f"{entity_id} <dgraph.type> \"{entity_key}\" .")
 
-                for related_entity_key, relation_predicate in entity_config.get("relations", {}).items():
-                    related_entity_id = entity_ids.get(related_entity_key)
-                    if related_entity_id:
-                        nquads.append(f"{entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
-                        print(f"Relatie toegevoegd: {entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
+            for prop in entity_config.get("properties", {}).keys():
+                api_field = config["api_to_property_mapping"].get(prop)
+                if api_field in item and item[api_field] is not None:
+                    value = str(item[api_field]).replace("_x000d_", "").replace("\"", "\\\"")
+                    if ";" in value:
+                        value = value.replace(";", " ")
+                    nquads.append(f"{entity_id} <{entity_key}.{prop}> \"{value}\" .")
+
+            for related_entity_key, relation_predicate in entity_config.get("relations", {}).items():
+                related_entity_id = entity_ids.get(related_entity_key)
+                if related_entity_id:
+                    nquads.append(f"{entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
+                    print(f"Relatie toegevoegd: {entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
 
     final_nquads = "{ set { " + '\n'.join(nquads) + " } }"
     print("Gegenereerde N-Quads:")
     print(final_nquads)
     return final_nquads
-
 
 
 

@@ -5,15 +5,21 @@
   "dgraph_url": "http://internship-project-core-alpha-1:8080/mutate?commitNow=true",
   "unique_properties": {
     "Ticket": "issue_number",
-    "Organization": "organization_name"
+    "User": "username",
+    "Organization": "organization_name", 
+    "Email": "email_address", 
+    "Phone": "phone_number"
   },
   "api_to_property_mapping": {
     "issue_number": "Code",
     "reported_at": "Melddatum",
     "due_date": "Gepl. gereeddatum",
     "closed_at": "Werkelijk gereed",
+    "first_name": "Melder", 
+    "username": "Melder",
     "organization_name": "Gebouw",
-    "email_address": "E-mailadres melder"
+    "email_address": "E-mailadres melder",
+    "phone_number": "Telefoon"
   },
   "entity_definitions": {
     "Ticket": {
@@ -25,28 +31,44 @@
         "closed_at": "closed_at"
       },
       "relations": {
-        "Organization": "organization_id"
+        "Organization": "organization_id",
+        "User": "reported_by"
+      }
+    },
+    "User": {
+      "prefix": "_:User", 
+      "properties": {
+        "first_name": "first_name",
+        "username": "username"
+      },
+      "relations": {
+        "Contact": "contacts"
       }
     },
     "Organization": {
       "prefix": "_:Org",
       "properties": {
         "organization_name": "organization_name"
-      },
-      "relations": { 
-        "Contact": "contact_details"
       }
     },
     "Contact": {
       "prefix": "_:Contact",
+      "match_properties": ["email_address", "phone_number"],
       "relations": {
-        "Email": "email_address"
+        "Email": "email", 
+        "Phone": "phone"
       }
     }, 
     "Email": {
       "prefix": "_:Email",
       "properties": {
         "email_address": "email_address"
+      }
+    }, 
+    "Phone": {
+      "prefix": "_Phone", 
+      "properties": {
+        "phone_number": "phone_number" 
       }
     }
   },
@@ -61,11 +83,6 @@
     "status_mapping": {
       "Gesloten": "Closed",
       "Open": "Open"
-    },
-    "attribute_mapping": {
-      "Impact": "impact_value",
-      "Urgentie": "urgency_level",
-      "Vakgroep": "department_group"
     }
   }
 }
