@@ -35,13 +35,26 @@ with open('config.json') as config_file:
 dgraph_query_url = "http://internship-project-core-alpha-1:8080/query"
 
 def entity_exists(entity_key, unique_value, dgraph_query_url):
+    unique_properties = config["unique_properties"][entity_key]
+    if isinstance(unique_properties, str):
+        unique_properties = [unique_properties]
+        unique_values = [unique_value]  
+    else:
+        unique_values = unique_value  
+
+    conditions = []
+    for prop, val in zip(unique_properties, unique_values):
+        conditions.append('eq({}.{}, "{}")'.format(entity_key, prop, val))
+
+    query_condition = " AND ".join(conditions)
+
     query = """
     {{
-        entity(func: eq({}.{}, \"{}\")) {{
+        entity(func: {}) {{
             uid
         }}
     }}
-    """.format(entity_key, config["unique_properties"][entity_key], unique_value)
+    """.format(query_condition)
 
     print(f"Uitvoeren van query in entity_exists voor {entity_key} met waarde: {unique_value}")
     
@@ -67,8 +80,12 @@ def entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url
     entity_config = config["entity_definitions"].get(entity_key, {})
     match_properties = entity_config.get("match_properties", [])
 
+    print (f"Match properties: {match_properties}")
+
+    print("Huidige item data:", item)
+
     if not match_properties:
-        # Geen match-eigenschappen gedefinieerd voor deze entiteit
+        print("Geen match-eigenschappen gedefinieerd voor deze entiteit")
         return None
 
     filters = []
@@ -77,8 +94,10 @@ def entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url
             value = item[prop]
             filters.append(f'anyofterms({entity_key}.{prop}, "{value}")')
 
+    print(f"Filters: {filters}")
+
     if not filters:
-        # Geen overeenkomende data gevonden in het item
+        print("Geen overeenkomende data gevonden in het item") 
         return None
 
     filter_query = " @filter(" + " AND ".join(filters) + ")"
@@ -90,7 +109,13 @@ def entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url
     }}
     """
 
+    print(f"Uitvoeren van query in entity_exists_based_on_properties voor {entity_key} met filters: {filters}") 
+
     response = requests.post(dgraph_query_url, json={'query': query}, headers={'Content-Type': 'application/json'})
+
+    print (f"Response: {response}")
+
+
     if response.status_code == 200:
         result = response.json()
         entities = result.get('data', {}).get('entity', [])
@@ -112,12 +137,25 @@ def send_to_dgraph(nquads, dgraph_url):
         logging.error(f"An error occurred while sending data to Dgraph: {e}")
         traceback.print_exc()
 
-def generate_nquad(entity_key, prop, value, entity_id):
+def format_value(value):
+    # Vervang eerst alle backslashes met dubbele backslashes
+    escaped_value = value.replace("\\", "\\\\")
+
+    # Vervang nu '_x000d_' met '\\n' voor newline karakters
+    escaped_value = escaped_value.replace('_x000d_', '\\n')
+
+    escaped_value = escaped_value.replace('\n', ' ')
+
     if 'http://' in value or 'https://' in value:
-        value = f"<{value}>"
+        rdf_string = f'"{escaped_value}"^^<http://www.w3.org/2001/XMLSchema#string>'
     else:
-        value = f"\"{value}\""
-    return f"{entity_id} <{entity_key}.{prop}> {value} ."
+        rdf_string = f'"{escaped_value}"' 
+
+    return rdf_string
+
+
+def generate_nquad(entity_key, prop, value, entity_id):
+    return f'{entity_id} <{entity_key}.{prop}> {value} .'
 
 def apply_mappings(item, config, entity_key):
     print(f"Applying mappings for entity: {entity_key}")
@@ -158,21 +196,22 @@ def build_nquads_data(item, config, dgraph_query_url):
             print(f"Na apply_mappings, item: {item}")
 
             entity_config = config["entity_definitions"][entity_key]
-            unique_property = config["unique_properties"].get(entity_key) 
+            unique_property = config["unique_properties"].get(entity_key)
             unique_value = None
             existing_uid = None
 
             if unique_property:
-                unique_value = item.get(config["api_to_property_mapping"].get(unique_property))
-                print(f"Unieke waarde voor {entity_key}: {unique_value}")
-
-                if unique_value is not None:
-                    existing_uid = entity_exists(entity_key, unique_value, dgraph_query_url)
-                    print(f"Bestaande entity_id voor {entity_key}: {existing_uid}")
+                if isinstance(unique_property, list):
+                # Als unique_property een lijst is, haal alle waarden op
+                    unique_value = [item.get(config["api_to_property_mapping"].get(prop)) for prop in unique_property]
+                else:
+                # Als unique_property geen lijst is, verwerk het als een enkele waarde
+                    unique_value = item.get(config["api_to_property_mapping"].get(unique_property))
             else:
                 # Voor entiteiten zonder unieke eigenschap
-                properties_to_check = entity_config.get("properties_to_check", [])
-                existing_uid = entity_exists_based_on_properties(entity_key, item, config, dgraph_query_url)
+                print(f"Geen unieke eigenschap gedefinieerd voor {entity_key}")
+                properties_to_check = entity_config.get("match_properties", [])
+                print(f"Properties to check: {properties_to_check}")
 
             if not existing_uid:
                 # Genereer nieuwe blank node
@@ -191,16 +230,14 @@ def build_nquads_data(item, config, dgraph_query_url):
             for prop in entity_config.get("properties", {}).keys():
                 api_field = config["api_to_property_mapping"].get(prop)
                 if api_field in item and item[api_field] is not None:
-                    value = str(item[api_field]).replace("_x000d_", "").replace("\"", "\\\"")
-                    if ";" in value:
-                        value = value.replace(";", " ")
-                    nquads.append(f"{entity_id} <{entity_key}.{prop}> \"{value}\" .")
+                    # Gebruik de format_value functie om de waarde correct te formatteren
+                    value = format_value(str(item[api_field]))
+                    nquads.append(generate_nquad(entity_key, prop, value, entity_id))
 
             for related_entity_key, relation_predicate in entity_config.get("relations", {}).items():
                 related_entity_id = entity_ids.get(related_entity_key)
                 if related_entity_id:
                     nquads.append(f"{entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
-                    print(f"Relatie toegevoegd: {entity_id} <{entity_key}.{relation_predicate}> {related_entity_id} .")
 
     final_nquads = "{ set { " + '\n'.join(nquads) + " } }"
     print("Gegenereerde N-Quads:")
@@ -218,8 +255,18 @@ consumer = KafkaConsumer(
     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
 )
 
+def write_to_json_file(data, file_path):
+    with open(file_path, 'a') as file:
+        json.dump(data, file)
+        file.write('\n')
+
 for message in consumer:
     logging.info(f"Received message: {message.value}")
     nquads_data = build_nquads_data(message.value, config, config['dgraph_url'])
     logging.info(f"Generated N-Quads Data:\n{nquads_data}")
+
+    json_file_path = '/tmp/nquads.json'
+
+    write_to_json_file(nquads_data, json_file_path)
+
     send_to_dgraph(nquads_data, config['dgraph_url'])

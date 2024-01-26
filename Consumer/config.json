@@ -7,6 +7,7 @@
     "Ticket": "issue_number",
     "User": "username",
     "Organization": "organization_name", 
+    "Contact": ["email.email_address", "phone.phone_number"],  
     "Email": "email_address", 
     "Phone": "phone_number"
   },
@@ -15,11 +16,14 @@
   },
   "api_to_property_mapping": {
     "issue_number": "Code",
+    "issue_type": "Incidentsoort", 
+    "issue_description": "Symptomen",
     "reported_at": "Melddatum",
     "due_date": "Gepl. gereeddatum",
     "ticket_status": "Voortgangsstatus",
     "priority": "Prioriteit",
     "closed_at": "Werkelijk gereed",
+    "resolution": "Oplossing",
     "first_name": "Melder", 
     "username": "Melder",
     "organization_name": "Gebouw",
@@ -31,11 +35,14 @@
       "prefix": "_:Ticket",
       "properties": {
         "issue_number": "issue_number",
+        "issue_type": "issue_type", 
+        "issue_description": "issue_description", 
         "reported_at": "reported_at",
         "due_date": "due_date",
         "priority": "priority",
         "ticket_status": "ticket_status",
-        "closed_at": "closed_at"
+        "closed_at": "closed_at",
+        "resolution": "resolution"
       },
       "relations": {
         "Organization": "organization_id",
@@ -90,6 +97,7 @@
       },
       "ticket_status": {
         "Gereed": "Closed",
+        "Gesloten": "Closed",
         "Open": "Open"
       }
     }
