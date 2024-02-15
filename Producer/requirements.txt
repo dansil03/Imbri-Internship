@@ -1,5 +1,0 @@
-confluent-kafka==2.3.0
-kafka-python==2.0.2
-pydgraph==23.0.2
-requests==2.31.0
-
