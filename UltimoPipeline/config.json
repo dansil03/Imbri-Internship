@@ -1,0 +1,109 @@
+{
+  "api_url": "http://192.168.2.38:3100/api/ultimo-data",
+  "kafka_server": "kafka:29092",
+  "kafka_topic": "UltimoData",
+  "kafka_consumer_group": "UltimoGroup",
+  "dgraph_url": "http://internship-project-core-alpha-1:8080",
+  "dgraph_mutation_url": "http://internship-project-core-alpha-1:8080/mutate?commitNow=true",
+  "unique_properties": {
+    "Ticket": "issue_number",
+    "User": "username",
+    "Organization": "organization_name",  
+    "Email": "email_address", 
+    "Phone": "phone_number"
+  },
+  "indirect_relationships": {
+    "Contact": {
+      "related_entity": "Email",
+      "related_field": "email_address",
+      "inverse_relation_field": "email"
+    }
+  },
+  "mapping_properties": {
+    "Ticket": ["priority", "ticket_status"] 
+  },
+  "api_to_property_mapping": {
+    "issue_number": "Code",
+    "issue_type": "Incidentsoort", 
+    "reported_at": "Melddatum",
+    "due_date": "Gepl. gereeddatum",
+    "ticket_status": "Voortgangsstatus",
+    "priority": "Prioriteit",
+    "closed_at": "Werkelijk gereed",
+    "first_name": "Melder", 
+    "username": "Melder",
+    "organization_name": "Gebouw",
+    "email_address": "E-mailadres melder",
+    "phone_number": "Telefoon"
+  },
+  "entity_definitions": {
+    "Ticket": {
+      "prefix": "_:Ticket",
+      "properties": {
+        "issue_number": "issue_number",
+        "issue_type": "issue_type", 
+        "reported_at": "reported_at",
+        "due_date": "due_date",
+        "priority": "priority",
+        "ticket_status": "ticket_status",
+        "closed_at": "closed_at"
+      },
+      "relations": {
+        "Organization": "organization_id",
+        "User": "reported_by"
+      }
+    },
+    "User": {
+      "prefix": "_:User", 
+      "properties": {
+        "first_name": "first_name",
+        "username": "username"
+      },
+      "relations": {
+        "Contact": "contacts"
+      }
+    },
+    "Organization": {
+      "prefix": "_:Org",
+      "properties": {
+        "organization_name": "organization_name"
+      }
+    },
+    "Contact": {
+      "prefix": "_:Contact",
+      "match_properties": ["email_address", "phone_number"],
+      "relations": {
+        "Email": "email", 
+        "Phone": "phone"
+      }
+    }, 
+    "Email": {
+      "prefix": "_:Email",
+      "properties": {
+        "email_address": "email_address"
+      }
+    }, 
+    "Phone": {
+      "prefix": "_Phone", 
+      "properties": {
+        "phone_number": "phone_number" 
+      }
+    }
+  },
+  "mappings": {
+    "Ticket": {
+      "priority": {
+        "1": "Critical",
+        "2": "High",
+        "3": "Medium",
+        "4": "Medium",
+        "5": "Low"
+      },
+      "ticket_status": {
+        "Gereed": "Closed",
+        "Gesloten": "Closed",
+        "Open": "Open"
+      }
+    }
+  }
+}

@@ -1,0 +1,140 @@
+type IAM_Organization { 
+    id: ID! 
+    uuid: String 
+    organization_name: String 
+    admin_user: IAM_User 
+    accounts: [IAM_Account] 
+}
+
+type IAM_Group { 
+    id: ID! 
+    uuid: String
+    account: IAM_Account 
+    group_name: String 
+    members: [IAM_User]
+    group_type: IAM_Group_Type
+    policies: [IAM_Policy]
+}
+
+enum IAM_Group_Type { 
+    DEFAULT
+    ADMIN   
+}
+
+type IAM_User { 
+    id: ID! 
+    uuid: String 
+    user_name: String 
+    externalAuthId: String 
+    account: [IAM_Account]
+    group: [IAM_Group] 
+    clients: [IAM_CLient]
+}
+
+enum IAM_User_Type { 
+    DEFAULT
+    SERVICE 
+}
+
+type IAM_CLient { 
+    id: ID! 
+    client_id: String 
+    client_name: String 
+    client_secret_id: String 
+    user: IAM_User 
+}
+
+type IAM_Account { 
+    id: ID! 
+    account_name: String 
+    account_policies: [IAM_Policy]
+    organization: IAM_Organization 
+    groups: [IAM_Group] @hasInverse (field: account)
+    users: [IAM_User] @hasInverse (field: account)
+} 
+
+type IAM_Policy { 
+    id: ID! 
+    policy_name: String 
+    policy_description: String 
+    policy_type: IAM_Policy_Type
+    policy_permissions: [IAM_Policy_Permission] 
+}
+
+enum IAM_Policy_Type {
+    ADMINISTRATIVE
+    USER_ACCESS
+    READ_ONLY
+    DATA_MANAGEMENT
+    SERVICE_ACCOUNT
+    NETWORK_ACCESS
+    APPLICATION_SPECIFIC
+    COMPLIANCE
+    AUDIT_MONITORING
+    EMERGENCY_ACCESS
+}
+
+type IAM_Policy_Permission { 
+    id: ID! 
+    policy: IAM_Policy
+    actions: Action 
+    scope: IAM_Scope 
+    access_type: Access_Type 
+}
+
+enum Action { 
+    CREATE 
+    UPDATE 
+    VIEW 
+    LIST 
+    PRINT
+    SEARCH 
+    EXPORT 
+    IMPORT 
+    AUDIT 
+    CONFIGURE 
+    ACTIVATE 
+    DEACTIVATE 
+    ASSIGN 
+    REVOKE 
+    APPROVE 
+    DENY 
+    SYNCHRONIZE 
+    BACKUP 
+    RESTORE 
+    NOTIFY 
+}
+
+enum Access_Type {
+    READ_ONLY
+    WRITE_ONLY
+    READ_WRITE
+    ADMINISTRATIVE
+    FULL_ACCESS
+    LIMITED_ACCESS
+    NO_ACCESS
+    CUSTOM_ACCESS
+    EXECUTE
+    MODIFY
+    VIEW
+    CONFIGURE
+    MANAGE
+}
+
+type IAM_Scope { 
+    id: ID! 
+    scope_name: String 
+    description: String 
+    scope_type: IAM_Scope_Type 
+    scope_details: String 
+}
+
+enum IAM_Scope_Type {
+    ORGANIZATION_BASED
+    GROUP_BASED 
+    FACILITY_BASED
+    LOCATION_BASED
+    PROJECT_BASED
+    CUSTOM
+}
+

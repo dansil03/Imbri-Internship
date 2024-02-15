@@ -1,0 +1,570 @@
+@startuml
+
+class User {
+    id: ID
+    username: String
+    first_name: String
+    middle_name: String
+    last_name: String
+    is_employee: Boolean
+    preferred_language: Locale
+    avatar: String
+    created_at: String
+    updated_at: String
+}
+
+class Alias {
+    id: ID
+    type: String
+    value: String
+    from: DateTime
+    to: DateTime
+}
+
+class Address_Book {
+    id: ID
+}
+
+class User_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+class Employee {
+    id: ID
+    department: String
+    job_title: String
+    start_date: String
+    end_date: String
+}
+
+class Knowledge {
+    id: ID
+    knowledge_area: String
+    knowledge_subarea: String
+    knowledge_level: String
+    knowledge_description: String
+}
+
+class Skill {
+    id: ID
+    skill_area: String
+    skill_subarea: String
+    skill_level: String
+    skill_description: String
+}
+
+class Experience {
+    id: ID
+    experience_area: String
+    experience_subarea: String
+    experience_level: String
+    experience_description: String
+}
+
+class Credential {
+    id: ID
+    credential_type: Credential_Type
+    credential_name: String
+    credential_description: String
+    credential_issuer: String
+    credential_number: String
+    credential_issue_date: String
+    credential_status: String
+    credential_noted: String
+}
+
+enum Credential_Type {
+    certificate
+    license
+    degree
+    diploma
+    letter
+    verbal_verification
+    other
+}
+
+class Verification {
+    id: ID
+    verification_type: Verification_Type
+    verification_date: String
+    verification_notes: String
+}
+
+enum Verification_Type {
+    website
+    email
+    verbal_verification
+    chat
+    letter
+    physical_verification
+    other
+}
+
+class Locale {
+    id: ID
+    ISO_639_1: String
+    ISO_639_2: String
+    ISO_15924: String
+    name: String
+}
+
+class Group {
+    id: ID
+    uuid: String
+    group_name: String
+    group_description: String
+}
+
+class Group_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+enum Group_Type {
+    user_group
+    organization_group
+    asset_group
+    ticket_group
+    country_group
+    language_group
+    time_zone_group
+}
+
+class Organization {
+    id: ID
+    organization_name: String
+    organization_description: String
+    organization_type: String
+}
+
+class OrgClassification {
+    id: ID
+    classification: String
+}
+
+class OrgIndustry {
+    id: ID
+    industry: String
+}
+
+class OrgSector {
+    id: ID
+    sector: String
+}
+
+class OrgSubsector {
+    id: ID
+    subsector: String
+}
+
+class Organization_Attributes {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+class Facility {
+    id: ID
+    facility_name: String
+    facility_description: String
+    facility_type: String
+}
+
+class Identifier {
+    id: ID
+    scheme: String
+    version: String
+    version_date: String
+    url: String
+    description: String
+    identifier_category: String
+}
+
+class Contact {
+    id: ID
+}
+
+enum Contact_Type {
+    user_contact
+    group_contact
+    organization_contact
+    asset_contact
+    ticket_contact
+}
+
+class Email {
+    id: ID
+    email_address: String
+    email_type: String
+    isPrimary: Boolean
+}
+
+class Phone {
+    id: ID
+    phone_number: String
+    phone_number_country_code: String
+    phone_number_extension: String
+    phone_type: String
+    phone_usage: String
+    phone_category: String
+    isPrimary: Boolean
+}
+
+class Social_Media {
+    id: ID
+    social_media_type: String
+    social_media_handle: String
+    isPrimary: Boolean
+}
+
+class Website {
+    id: ID
+    site_name: String
+    site_description: String
+    site_type: String
+}
+
+class Location {
+    id: ID
+    location_name: String
+    latitude: Float
+    longitude: Float
+    elevation: Float
+}
+
+class Country {
+    id: ID
+    ISO_3166_alpha3: String
+    ISO_3166_alpha2: String
+    ISO_3166_numeric: String
+    common_name: String
+    official_name: String
+}
+
+class Country_Subdivisions {
+    id: ID
+    subdivision_level_num: String
+    subdivision_level_num_name: String
+    subdivision_name: String
+    ISO_3166_2_alpha3: String
+    ISO_3166_2_alpha2: String
+    ISO_3166_2_numeric: String
+}
+
+enum Subdivision_Level {
+    NATIONAL
+    REGIONAL
+    PROVINCIAL
+    MUNICIPAL
+    LOCAL
+}
+
+class Country_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+class Time_Zone {
+    id: ID
+    ISO_8601: String
+    dst_offset: Float
+    gmt_offset: Float
+    raw_offset: Float
+}
+
+class Address {
+    id: ID
+    line_1_number_building: String
+    line_2_street_name: String
+    line_3_area_neighborhood: String
+    line_4_city_town_locality: String
+    line_5_state_province_region: String
+}
+
+class Postal_Code {
+    id: ID
+    postal_code: String
+    postal_code_name: String
+    postal_code_format: String
+}
+
+class Asset {
+    id: ID
+    asset_type: String
+    asset_name: String
+    asset_description: String
+}
+
+class Brand {
+    id: ID
+    brand_name: String
+    brand_type: String
+    brand_description: String
+    brand_logo: String
+}
+
+class Asset_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+enum Asset_Event_Type {
+    purchase
+    commision
+    maintenance
+    repair
+    upgrade
+    downgrade
+    decommission
+    recommission
+}
+
+class SLA {
+    id: ID
+    start_date: String
+    end_date: String
+}
+
+class SLA_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+class Ticket {
+    id: ID
+    issue_number: String
+    issue_type: String
+    issue_description: String
+    reported_at: String
+    assigned_at: String
+    priority: Ticket_Priority
+    ticket_status: Ticket_Status
+    resolution: String
+    due_date: String
+    closed_at: String
+    time_estimate: String
+    time_spent: String
+}
+
+enum Ticket_Status {
+    New
+    Open
+    In_progress
+    Closed
+    Needs_clarification
+    Reopend
+}
+
+enum Ticket_Priority {
+    Low
+    Medium
+    High
+    Critical
+}
+
+class Ticket_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+class Document {
+    id: ID
+    document_type: String
+    document_name: String
+    document_mime_type: String
+    document_tags: String
+    document_url: String
+    document_description: String
+    document_date: String
+    document_version: String
+    document_version_date: String
+}
+
+class Document_Attribute {
+    id: ID
+    attribute_name: String
+    attribute_value: String
+}
+
+User "1" *-- "*" Alias : has >
+User "1" *-- "*" Address_Book : has >
+User "1" *-- "*" User_Attribute : has >
+User "1" *-- "1" Employee : has >
+User "1" *-- "*" Locale : prefers >
+User "1" *-- "*" Group : member >
+User "1" *-- "*" Organization : member >
+User "1" *-- "*" Facility : member >
+User "1" *-- "*" Contact : has >
+User "1" *-- "*" Verification : has >
+User "1" *-- "*" Identifier : has >
+User "1" *-- "*" User : created_by >
+User "1" *-- "*" User : updated_by >
+
+Address_Book "1" *-- "*" Contact : has >
+
+User_Attribute "1" *-- "1" User : belongs_to >
+
+Employee "1" *-- "1" User : is >
+Employee "1" *-- "*" Identifier : has >
+Employee "1" *-- "*" Knowledge : has >
+Employee "1" *-- "*" Skill : has >
+Employee "1" *-- "*" Experience : has >
+Employee "1" *-- "*" Credential : has >
+
+Knowledge "1" *-- "1" Employee : belongs_to >
+Knowledge "1" *-- "*" Identifier : has >
+Knowledge "1" *-- "*" Credential : related_to >
+
+Skill "1" *-- "1" Employee : belongs_to >
+Skill "1" *-- "*" Identifier : has >
+Skill "1" *-- "*" Credential : related_to >
+
+Experience "1" *-- "1" Employee : belongs_to >
+Experience "1" *-- "*" Identifier : has >
+Experience "1" *-- "*" Credential : related_to >
+
+Credential "1" *-- "1" Employee : belongs_to >
+Credential "1" *-- "*" Identifier : has >
+Credential "1" *-- "*" Verification : related_to >
+
+Verification "1" *-- "*" Credential : verifies >
+Verification "1" *-- "*" Identifier : has >
+Verification "1" *-- "1" User : verified_by >
+
+Locale "1" *-- "*" User : preferred_by >
+Locale "1" *-- "*" Identifier : has >
+
+Group "1" *-- "*" User : has_members >
+Group "1" *-- "*" Group_Attribute : has >
+Group "1" *-- "1" Organization : belongs_to >
+Group "1" *-- "1" Facility : belongs_to >
+Group "1" *-- "*" Identifier : has >
+Group "1" *-- "1" User : created_by >
+Group "1" *-- "1" User : updated_by >
+
+Group_Attribute "1" *-- "1" Group : belongs_to >
+
+Organization "1" *-- "*" User : has_members >
+Organization "1" *-- "*" Group : has >
+Organization "1" *-- "*" Organization_Attributes : has >
+Organization "1" *-- "*" Contact : has >
+Organization "1" *-- "*" Ticket : has >
+Organization "1" *-- "*" Alias : has >
+Organization "1" *-- "*" OrgClassification : has >
+Organization "1" *-- "*" OrgIndustry : has >
+Organization "1" *-- "*" OrgSector : has >
+Organization "1" *-- "*" OrgSubsector : has >
+Organization "1" *-- "*" Facility : has >
+Organization "1" *-- "*" Asset : has >
+Organization "1" *-- "*" SLA : has >
+Organization "1" *-- "*" Identifier : has >
+Organization "1" *-- "1" User : created_by >
+Organization "1" *-- "1" User : updated_by >
+
+OrgClassification "1" *-- "*" Organization : classifies >
+
+OrgIndustry "1" *-- "*" Organization : categorizes >
+
+OrgSector "1" *-- "*" Organization : categorizes >
+
+OrgSubsector "1" *-- "*" Organization : categorizes >
+
+Organization_Attributes "1" *-- "1" Organization : belongs_to >
+
+Facility "1" *-- "1" Organization : belongs_to >
+Facility "1" *-- "*" Alias : has >
+Facility "1" *-- "*" Contact : has >
+Facility "1" *-- "1" Location : located_at >
+Facility "1" *-- "1" User : created_by >
+Facility "1" *-- "1" User : updated_by >
+
+Identifier "1" *-- "1" Organization : authorized_by >
+
+Contact "1" *-- "*" Email : has >
+Contact "1" *-- "*" Phone : has >
+Contact "1" *-- "*" Social_Media : has >
+Contact "1" *-- "*" Website : has >
+Contact "1" *-- "1" Address : located_at >
+
+Email "1" *-- "1" Contact : belongs_to >
+
+Phone "1" *-- "1" Contact : belongs_to >
+
+Social_Media "1" *-- "1" Contact : belongs_to >
+
+Website "1" *-- "1" Contact : belongs_to >
+Website "1" *-- "*" Identifier : has >
+
+Location "1" *-- "*" Country : located_in >
+Location "1" *-- "*" Time_Zone : has >
+Location "1" *-- "*" Identifier : has >
+Location "1" *-- "1" Address : has >
+
+Country "1" *-- "*" Country_Attribute : has >
+Country "1" *-- "*" Identifier : has >
+Country "1" *-- "1" Location : located_in >
+Country "1" *-- "*" Country_Subdivisions : has >
+
+Country_Subdivisions "1" *-- "1" Country : belongs_to >
+Country_Subdivisions "1" *-- "1" Location : located_in >
+
+Country_Attribute "1" *-- "1" Country : belongs_to >
+
+Time_Zone "1" *-- "1" Location : belongs_to >
+Time_Zone "1" *-- "*" Identifier : has >
+
+Address "1" *-- "1" Location : belongs_to >
+Address "1" *-- "1" Contact : belongs_to >
+Address "1" *-- "1" Postal_Code : has >
+Address "1" *-- "1" Country : located_in >
+
+Postal_Code "1" *-- "1" Country : belongs_to >
+
+Asset "1" *-- "*" Asset_Attribute : has >
+Asset "1" *-- "1" Organization : owned_by >
+Asset "1" *-- "1" Facility : located_in >
+Asset "1" *-- "1" Organization : vendor >
+Asset "1" *-- "*" Location : has >
+Asset "1" *-- "*" SLA : has >
+Asset "1" *-- "*" Document : has >
+Asset "1" *-- "*" Identifier : has > 
+Asset "1" -- "*" Identifier : has >
+
+Brand "1" *-- "1" Organization : manufacturer > 
+Brand "1" -- "*" Identifier : has >
+
+Asset_Attribute "1" *-- "1" Asset : belongs_to >
+
+SLA "1" -- "*" SLA_Attribute : has >
+SLA "1" *-- "1" Asset : related_to >
+SLA "1" -- "*" Organization : related_to >
+SLA "1" -- "*" Ticket : covers >
+
+SLA_Attribute "1" *-- "1" SLA : belongs_to >
+
+Ticket "1" -- "*" Ticket_Attribute : has >
+Ticket "1" *-- "1" Organization : related_to >
+Ticket "1" *-- "1" User : reported_by >
+Ticket "1" *-- "1" User : assigned_by >
+Ticket "1" *-- "1" User : assigned_to >
+Ticket "1" -- "*" SLA : related_to >
+Ticket "1" -- "*" Identifier : has >
+
+Ticket_Attribute "1" *-- "1" Ticket : belongs_to >
+
+Document "1" *-- "1" Asset : related_to >
+Document "1" *-- "1" User : related_to >
+Document "1" *-- "1" Organization : related_to >
+Document "1" -- "*" Document_Attribute : has >
+Document "1" -- "*" Identifier : has >
+
+Document_Attribute "1" *-- "1" Document : belongs_to >
+
+@enduml

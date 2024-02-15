@@ -1,0 +1,53 @@
+type Audit_Log {
+    id: ID! 
+    entity: Entity
+    property: Property
+    audit_type: Audit_Action_Type
+    change_date: DateTime 
+    account: Account
+    channel: Channel
+}
+
+enum Channel {
+    REST_BIZ #Used for business or operational transactions executed through RESTful APIs. Includes actions like creating, updating, retrieving, or deleting data in a business context.
+    REST_LOGIN #Specific for login or authentication actions via a RESTful API. Focuses on capturing the process of user or system authentication for accessing the system.
+    API #A general category for interactions that occur through APIs, not limited to RESTful APIs. This can include SOAP, GraphQL, or custom API protocols for various system interactions.
+    DESK_APP #Represents interactions that occur directly through the helpdesk software application. It includes any actions taken within the software's user interface or internal processes.
+    UNKNOWN #A catch-all for interactions that don't clearly fit into the other defined categories. Useful for logging unanticipated or undefined channels.
+}
+
+
+enum Audit_Action_Type { 
+    Create 
+    Read 
+    Update 
+    Delete 
+    Access
+    Print
+}
+
+type Entity { 
+    id: ID! 
+    entity_id: String! 
+    entity_name: String 
+}
+
+type Property {
+    id: ID! 
+    property: String 
+    old_value: String 
+    new_value: String
+}
+
+type Account {
+    id: ID! 
+    account_type: Account_Type
+    Account_uuid: String 
+    account_name: String 
+}
+
+enum Account_Type { 
+    USER 
+    GROUP 
+    ORGANIZATION 
+}

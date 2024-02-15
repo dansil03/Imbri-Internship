@@ -1,0 +1,50 @@
+type Audit_Log {
+    id: ID! 
+    entity: Entity
+    property: Property
+    audit_type: Audit_Action_Type
+    change_date: DateTime 
+    employee: Employee
+    organization: Organization
+    facility: Facility
+}
+
+enum Audit_Action_Type { 
+    Create 
+    Read 
+    Update 
+    Delete 
+    Access
+    Print
+}
+
+type Entity { 
+    id: ID! 
+    entity_id: String! 
+    entity_name: String 
+}
+
+type Property {
+    id: ID! 
+    property: String 
+    old_value: String 
+    new_value: String
+}
+
+type Employee {
+    id: ID! 
+    employee_id: String 
+    employee_name: String 
+}
+
+type Organization {
+    id: ID! 
+    organization_id: String
+    organization_name: String 
+}
+
+type Facility { 
+    id: ID! 
+    facility_id: String
+    facility_name: String 
+}

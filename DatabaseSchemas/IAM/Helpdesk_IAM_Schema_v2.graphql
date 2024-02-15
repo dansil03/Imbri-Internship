@@ -1,0 +1,122 @@
+type IAM_Group { 
+    id: ID! 
+    uuid: String
+    group_name: String 
+    accounts: [IAM_Account]
+    policies: [IAM_Policy]
+}
+
+type IAM_User { 
+    id: ID! 
+    uuid: String 
+    user_name: String 
+    account: IAM_Account 
+}
+
+type IAM_Account { 
+    id: ID! 
+    account_type: IAM_Account_Type 
+    account_name: String 
+    account_policies: [IAM_Policy]
+    groups: [IAM_Group] @hasInverse (field: accounts)
+    users: [IAM_User] @hasInverse (field: account)
+}
+
+enum IAM_Account_Type {
+    GROUP 
+    USER
+    ADMIN
+}   
+
+type IAM_Policy { 
+    id: ID! 
+    policy_name: String 
+    policy_description: String 
+    policy_type: IAM_Policy_Type
+    policy_permissions: [IAM_Policy_Permission] 
+}
+
+enum IAM_Policy_Type {
+    ADMINISTRATIVE
+    USER_ACCESS
+    READ_ONLY
+    DATA_MANAGEMENT
+    SERVICE_ACCOUNT
+    NETWORK_ACCESS
+    APPLICATION_SPECIFIC
+    COMPLIANCE
+    AUDIT_MONITORING
+    EMERGENCY_ACCESS
+}
+
+type IAM_Policy_Permission { 
+    id: ID! 
+    policy: IAM_Policy
+    actions: Action 
+    resource_type: Resource_Type 
+    target_api_client: IAM_API_Client  
+    scope: Scope 
+    access_type: Access_Type 
+}
+
+enum Action { 
+    CREATE 
+    UPDATE 
+    VIEW 
+    LIST 
+    PRINT
+    SEARCH 
+    EXPORT 
+    IMPORT 
+    AUDIT 
+    CONFIGURE 
+    ACTIVATE 
+    DEACTIVATE 
+    ASSIGN 
+    REVOKE 
+    APPROVE 
+    DENY 
+    SYNCHRONIZE 
+    BACKUP 
+    RESTORE 
+    NOTIFY 
+}
+
+enum Access_Type {
+    READ_ONLY
+    WRITE_ONLY
+    READ_WRITE
+    ADMINISTRATIVE
+    FULL_ACCESS
+    LIMITED_ACCESS
+    NO_ACCESS
+    CUSTOM_ACCESS
+    EXECUTE
+    MODIFY
+    VIEW
+    CONFIGURE
+    MANAGE
+}
+
+type Scope { 
+    id: ID! 
+    scope_name: String 
+    description: String 
+    scope_type: Scope_Type 
+    scope_details: String 
+}
+
+enum Scope_Type {
+    ORGANIZATION_BASED
+    GROUP_BASED 
+    FACILITY_BASED
+    LOCATION_BASED
+    PROJECT_BASED
+    CUSTOM
+}
+
+type IAM_API_Client { 
+    id: ID! 
+    client_name: String 
+    client_secret: String 
+}

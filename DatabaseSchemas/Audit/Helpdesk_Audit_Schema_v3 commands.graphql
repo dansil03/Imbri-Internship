@@ -1,0 +1,59 @@
+type Audit_Login_Event { 
+    id: ID! 
+    channel: Channel 
+    user: User 
+    event_time: DateTime 
+    login_type: Login_Type 
+    login_status: Login_Status
+}
+
+
+enum Login_Type { 
+    CLIENT_CREDENTIALS 
+    PASSWORD 
+}
+
+enum Login_Status { 
+    SUCCESS 
+    AUTH_FAIL 
+    CREDENTIALS_EXPIRED     
+}
+
+type Audit_Object_Change_Event { 
+    id: ID! 
+    channel: Channel 
+    ip_v4: String  
+    user: User
+    event_type: Event_Type 
+    record_id: String 
+    table_name: String 
+    attribute_name: String 
+    event_time: DateTime 
+    old_value: String 
+    new_value: String  
+}
+
+enum Event_Type { 
+    Create 
+    Read 
+    Update 
+    Delete 
+    Access
+    Print
+}
+
+enum Channel {
+    REST_BIZ #Used for business or operational transactions executed through RESTful APIs. Includes actions like creating, updating, retrieving, or deleting data in a business context.
+    REST_LOGIN #Specific for login or authentication actions via a RESTful API. Focuses on capturing the process of user or system authentication for accessing the system.
+    API #A general category for interactions that occur through APIs, not limited to RESTful APIs. This can include SOAP, GraphQL, or custom API protocols for various system interactions.
+    WEBHOOK
+    DESKTOP_APP #Represents interactions that occur directly through the helpdesk software application. It includes any actions taken within the software's user interface or internal processes.
+    MOBILE_APP 
+    UNKNOWN #A catch-all for interactions that don't clearly fit into the other defined categories. Useful for logging unanticipated or undefined channels.
+}
+
+type User { 
+    id: ID! 
+    uuid: String 
+    user_name: String 
+}

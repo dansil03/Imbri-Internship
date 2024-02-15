@@ -1,0 +1,573 @@
+type User {
+    id: ID!
+    username: String! @search(by: [term])
+    first_name: String @search(by: [term])
+    middle_name: String @search(by: [term])
+    last_name: String! @search(by: [term]) 
+    aliases: [Alias] 
+    user_role: User_Role! 
+    is_employee: Boolean
+    employee: Employee @hasInverse(field: user)
+    preferred_language: Locale 
+    group_member: [Group] 
+    organization_member: [Organization]
+    facility_member: [Facility]
+    avatar: String 
+    user_attributes: [User_Attribute] @hasInverse(field: user)
+    address_book: Address_Book @hasInverse(field: user)
+    contacts: [Contact] 
+    user_tags: [String] @search(by: [term])    
+    verified_credentials: [Verification] @hasInverse(field: verified_by)
+    identifiers: [Identifier]
+    created_at: String 
+    created_by: User 
+    updated_at: String 
+    updated_by: User
+} 
+
+type Alias { 
+    id: ID! 
+    type: String
+    value: String
+    from: DateTime 
+    to: DateTime
+}
+
+type Address_Book {
+    id: ID! 
+    user: User! 
+    contacts: [Contact]
+}
+
+enum User_Role {
+    employee
+    customer
+    vendor
+    partner
+    contractor 
+}
+
+type User_Attribute {
+    id: ID!
+    user: User 
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+type Employee {
+    id: ID!
+    user: User 
+    department: [String] @search(by: [term])
+    job_title: String @search(by: [term])
+    reports_to: Employee 
+    identifiers: [Identifier]
+    start_date: String
+    end_date: String
+    employee_tags: [String] @search(by: [term])
+    knowledge: [Knowledge] @hasInverse(field: employee)
+    skills: [Skill] @hasInverse(field: employee)
+    experience: [Experience] @hasInverse(field: employee)	  
+    credentials: [Credential] @hasInverse(field: employee)  
+}
+
+type Knowledge {
+    id: ID!
+    employee: Employee @hasInverse(field: knowledge)
+    knowledge_area: String @search(by: [term])
+    knowledge_subarea: String @search(by: [term])
+    knowledge_level: String @search(by: [term])
+    knowledge_description: String @search(by: [term])
+    identifiers: [Identifier]
+    knowledge_tags: [String] @search(by: [term])
+    credentials: [Credential] 
+}
+
+type Skill {
+    id: ID!
+    employee: Employee @hasInverse(field: skills)
+    skill_area: String @search(by: [term])
+    skill_subarea: String @search(by: [term])
+    skill_level: String @search(by: [term])
+    skill_description: String @search(by: [term])
+    identifiers: [Identifier]
+    skill_tags: [String] @search(by: [term])
+    credentials: [Credential] 
+}
+
+type Experience {
+    id: ID!
+    employee: Employee @hasInverse(field: experience)
+    experience_area: String @search(by: [term])
+    experience_subarea: String @search(by: [term])
+    experience_level: String @search(by: [term])
+    experience_description: String @search(by: [term])
+    identifiers: [Identifier]
+    experience_tags: [String] @search(by: [term])
+    credentials: [Credential] 
+}
+
+type Credential {
+    id: ID!
+    employee: Employee @hasInverse(field: credentials)
+    credential_type: Credential_Type
+    credential_name: String @search(by: [term])
+    credential_description: String @search(by: [term])
+    credential_issuer: String @search(by: [term])
+    credential_number: String @search(by: [term])
+    credential_issue_date: String
+    credential_status: String 
+    credential_noted: String 
+    credential_tags: [String] @search(by: [term])
+    identifiers: [Identifier]
+    verification: [Verification] @hasInverse(field: credentials)
+
+}
+
+enum Credential_Type {
+    certificate
+    license
+    degree
+    diploma
+    letter 
+    verbal verification  
+    other 
+}
+
+type Verification {
+    id: ID!
+    verification_type: Verification_Type 
+    verification_date: String
+    verified_by: User @hasInverse(field: verified_credentials)
+    verification_notes: String @search(by: [term])
+    identifiers: [Identifier]
+    verification_tags: [String] @search(by: [term])
+    credentials: [Credential] @hasInverse (field: verification)
+}
+
+enum Verification_Type {
+    website  
+    email
+    verbal verification 
+    chat 
+    letter
+    physical verification 
+    other
+}
+
+
+type Locale {
+    id: ID!
+    ISO_639_1: String! @search(by: [term])
+    ISO_639_2: String! @search(by: [term])
+    ISO_15924: String! @search(by: [term]) 
+    name: String @search(by: [term])
+    preferred_by: [User] @hasInverse(field: preferred_language)   
+    identifiers: [Identifier]
+}
+
+type Group { 
+    id: ID!
+    uuid: String
+    group_name: String! @search(by: [term])
+    group_type: Group_Type 
+    group_description: String @search(by: [term])
+    contact_details: [Contact] 
+    group_members: [User] @hasInverse(field: group_member)
+    group_attributes: [Group_Attribute] @hasInverse(field: group) 
+    belongs_to_organization: Organization 
+    belongs_to_facility: Facility
+    group_tags: [String] @search(by: [term])
+    identifiers: [Identifier]
+    created_at: String 
+    created_by: User 
+    updated_at: String
+    updated_by: User 
+}
+
+enum Group_Type {
+    user_group 
+    organization_group 
+    asset_group 
+    ticket_group 
+    country_group 
+    language_group 
+    time_zone_group 
+}
+
+type Group_Attribute {
+    id: ID!
+    group: Group @hasInverse(field: group_attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+
+type Organization {
+    id: ID!
+    users: [User] @hasInverse(field: organization_member)
+    groups: [Group] @hasInverse(field: belongs_to_organization)
+    attributes: [Organization_Attributes] @hasInverse(field: organization)
+    contact_details: [Contact]
+    tickets: [Ticket]
+    organization_name: String @search(by: [term])
+    aliases: [Alias] 
+    organization_description: String @search(by: [term])
+    organization_type: String @search(by: [term]) 
+    organization_attributes: [Organization_Attributes] 
+    org_classification: OrgClassification @hasInverse(field: organization)
+    org_industry: OrgIndustry @hasInverse(field: organization)
+    org_sector: OrgSector @hasInverse(field: organization)
+    org_subsector: OrgSubsector @hasInverse(field: organization)
+    domains: [String] @search(by: [hash])
+    facilities: [Facility] @hasInverse(field: organization)
+    organization_tags: [String] @search(by: [term])
+    vendor_assets: [Asset] @hasInverse(field: vendor)
+    sla: [SLA]
+    identifiers: [Identifier]
+    created_at: String 
+    created_by: User 
+    updated_at: String 
+    updated_by: User
+} 
+
+type OrgClassification {
+    id: ID!
+    classification: String! @search(by: [term])
+    organization: [Organization]
+}
+
+type OrgIndustry {
+    id: ID!
+    industry: String! @search(by: [term])
+    organization: [Organization]
+}
+
+type OrgSector {
+    id: ID!
+    sector: String! @search(by: [term])
+    organization: [Organization]
+}
+
+type OrgSubsector {
+    id: ID!
+    subsector: String! @search(by: [term])
+    organization: [Organization]
+}
+
+type Organization_Attributes {
+    id: ID! 
+    attribute_name: String! @search(by: [term])
+    attribute_value: String! @search(by: [term])
+    organization: Organization @hasInverse(field: attributes)
+}
+
+type Facility {
+    id: ID!
+    organization: Organization @hasInverse(field: facilities)
+    facility_name: String! @search(by: [term])
+    aliases: [Alias]
+    contact_details: [Contact]
+    location: Location
+    facility_description: String @search(by: [term])
+    facility_type: String @search(by: [term])
+    facility_tags: [String] @search(by: [term])
+    identifiers: [Identifier]
+    created_at: String
+    created_by: User
+    updated_at: String
+    updated_by: User
+}
+
+
+type Identifier { 
+    id: ID! 
+    scheme: String! @search(by: [term]) 
+    version: String! @search(by: [term])
+    version_date: String
+    url: String! @search(by: [term]) 
+    description: String @search(by: [term])
+    identifier_category: String @search(by: [term]) 
+    authority: Organization
+}
+
+type Contact { 
+    id: ID!
+    contact_type: Contact_Type
+    email: Email @hasInverse(field: contact)
+    phone: Phone @hasInverse(field: contact) 
+    website: Website @hasInverse(field: contact)  
+    social_media: Social_Media @hasInverse(field: contact)
+    address: Address
+}
+
+enum Contact_Type {
+    user_contact 
+    group_contact
+    organization_contact
+    asset_contact
+    ticket_contact 
+}
+
+type Email {
+    id: ID!
+    email_address: String @search(by: [term])
+    email_type: String @search(by: [term]) 
+    contact: Contact @hasInverse(field: email)
+    isPrimary: Boolean 
+}
+
+type Phone { 
+    id: ID!
+    phone_number: String @search(by: [term])
+    phone_number_country_code: String! @search(by: [term])
+    phone_number_extension: String @search(by: [term])
+    phone_type: String @search(by: [term]) 
+    phone_usage: String @search(by: [term]) 
+    phone_category: String @search(by: [term])  
+    contact: Contact @hasInverse(field: phone)
+    isPrimary: Boolean 
+}
+
+type Social_Media { 
+    id: ID!
+    social_media_type: String @search(by: [term]) 
+    social_media_handle: String @search(by: [term]) 
+    contact: Contact @hasInverse(field: social_media)
+    isPrimary: Boolean 
+}
+
+type Website {
+    id: ID!
+    site_name: String! @search(by: [term])
+    site_description: String @search(by: [term])
+    site_type: String @search(by: [term]) 
+    contact: Contact @hasInverse(field: website)
+    identifiers: [Identifier]
+}
+
+type Location { 
+    id: ID!
+    location_name: String @search(by: [term])
+    latitude: Float
+    longitude: Float
+    elevation: Float
+    time_zone: Time_Zone @hasInverse(field: location)
+    identifiers: [Identifier] 
+    location_tags: [String] @search(by: [term])
+    location_address: Address
+}
+
+type Country {
+    id: ID!
+    ISO_3166_alpha3: String! @search(by: [term])
+    ISO_3166_alpha2: String! @search(by: [term])
+    ISO_3166_numeric: String! @search(by: [term])
+    common_name: String @search(by: [term])
+    official_name: String @search(by: [term])
+    attributes: [Country_Attribute] @hasInverse(field: country)
+    identifiers: [Identifier]
+    country_location: Location 
+    country_subdivisions: [Country_Subdivisions] @hasInverse(field: country)
+}
+
+
+type Country_Subdivisions {
+    id: ID!
+    country: Country 
+    subdivision_level_num: String 
+    subdivision_level_num_name: String 
+    subdivision_name: String @search(by: [term])
+    ISO_3166_2_alpha3: String! @search(by: [term])
+    ISO_3166_2_alpha2: String! @search(by: [term])
+    ISO_3166_2_numeric: String! @search(by: [term])
+    identifiers: [Identifier]
+    country_subdevision_location: Location 
+}
+
+enum Subdivision_Level {
+    NATIONAL 
+    REGIONAL 
+    PROVINCIAL 
+    MUNICIPAL 
+    LOCAL 
+}
+
+
+type Country_Attribute {
+    id: ID!
+    country: Country @hasInverse(field: attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+type Time_Zone {
+    id: ID!
+    ISO_8601: String! @search(by: [term])
+    dst_offset: Float
+    gmt_offset: Float
+    raw_offset: Float
+    location: Location @hasInverse(field: time_zone)
+    identifiers: [Identifier]
+}
+
+type Address {
+    id: ID!
+    location: Location @hasInverse(field: location_address)
+    contact_address: Contact @hasInverse(field: address)
+    line_1_number_building: String @search(by: [term]) 
+    line_2_street_name: String @search(by: [term])
+    line_3_area_neighborhood: String @search(by: [term])
+    line_4_city_town_locality: String @search(by: [term])
+    line_5_state_province_region: String @search(by: [term]) 
+    postal_code: Postal_Code 
+    country: Country 
+    identifiers: [Identifier]
+}
+
+
+type Postal_Code {
+    id: ID! 
+    postal_code: String! @search(by: [term])
+    postal_code_country: Country 
+    postal_code_name: String 
+    postal_code_format: String
+}
+
+type Asset {
+    id: ID!
+    asset_type: String @search(by: [term])
+    asset_brand: Brand 
+    asset_model: String 
+    asset_serial_number: String 
+    asset_name: String @search(by: [term])
+    asset_description: String @search(by: [term])
+    attributes: [Asset_Attribute] @hasInverse(field: asset)
+    asset_owner: Organization 
+    asset_facility: Facility 
+    vendor: Organization 
+    purchase_date: String 
+    replacement_date: String 
+    asset_location: [Location] 
+    sla: [SLA]
+    documents: [Document]
+    identifiers: [Identifier]
+    asset_tags: [String]
+}
+
+type Brand {
+    id: ID! 
+    brand_name: String 
+    brand_type: String 
+    brand_description: String
+    brand_logo: String 
+    brand_manufacturer: Organization 
+    identifiers: [Identifier]
+}
+
+type Asset_Attribute {
+    id: ID!
+    asset: Asset @hasInverse(field: attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+
+enum Asset_Event_Type {
+    purchase
+    commision
+    maintenance
+    repair
+    upgrade
+    downgrade
+    decommission
+    recommission
+}
+
+type SLA {
+    id: ID!
+    start_date: String
+    end_date: String
+    attributes: [SLA_Attribute] @hasInverse(field: sla)
+    sla_asset: Asset @hasInverse(field: sla)
+    sla_organization: [Organization] @hasInverse(field: sla)
+    sla_ticket: [Ticket]
+}
+
+type SLA_Attribute {
+    id: ID!
+    sla: SLA @hasInverse(field: attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+type Ticket {
+    id: ID!
+    organization_id: Organization @hasInverse(field: tickets)
+    issue_number: String @search(by: [term])
+    issue_type: String @search(by: [term])
+    issue_description: String 
+    reported_by: User 
+    reported_at: String
+    assigned_by: User
+    assigned_to: User 
+    assigned_at: String 
+    priority: Ticket_Priority
+    ticket_status: Ticket_Status
+    resolution: String 
+    due_date: String
+    closed_at: String
+    time_estimate: String
+    time_spent: String
+    attributes: [Ticket_Attribute] @hasInverse(field: ticket)
+    related_sla: [SLA] @hasInverse(field: sla_ticket)
+    identifiers: Identifier
+}
+
+enum Ticket_Status {
+    New 
+    Open 
+    In_progress
+    Closed 
+    Needs_clarification 
+    Reopend 
+}
+
+enum Ticket_Priority {
+    Low 
+    Medium  
+    High
+    Critical
+}
+
+type Ticket_Attribute {
+    id: ID!
+    ticket: Ticket @hasInverse(field: attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}
+
+
+type Document {
+    id: ID!
+    asset: Asset @hasInverse(field: documents)
+    document_user: User 
+    document_organization: Organization
+    document_type: String @search(by: [term])
+    document_name: String @search(by: [term])
+    document_mime_type: String @search(by: [term])
+    identifiers: Identifier
+    document_tags: [String] @search(by: [term])
+    document_url: String @search(by: [term])
+    document_description: String @search(by: [term])
+    document_date: String
+    document_version: String @search(by: [term])
+    document_version_date: String
+    document_attributes: [Document_Attribute] @hasInverse(field: document)
+}
+
+type Document_Attribute {
+    id: ID!
+    document: Document @hasInverse(field: document_attributes)
+    attribute_name: String @search(by: [term])
+    attribute_value: String @search(by: [term]) 
+}

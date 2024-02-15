@@ -1,0 +1,44 @@
+interface Account { 
+    id: ID! 
+    account_type: Account_Type 
+    user_name: String! @search(by: [hash])
+    roles: [Role] @hasInverse(field: users) 
+    account_status: Account_Status
+    permissions: [Permission] @hasInverse(field: accounts)
+}
+
+enum Account_Type {
+    USER
+    SERVICE
+}
+
+enum Account_Status {
+    ACTIVE
+    LOCKED
+    DISABLED
+    PENDING_VERIFICATION
+}
+
+type Account_Activity { 
+    id: ID! 
+    user_name: String! 
+    last_login: DateTime
+    login_attempts: Int
+}
+
+type Role {
+    id: ID!
+    name: String! @search(by: [term])
+    description: String
+    accounts: [Account] 
+    permissions: [Permission] @hasInverse(field: roles)
+    users: [Account] 
+}
+
+type Permission {
+    id: ID!
+    name: String! @search(by: [term])
+    description: String
+    roles: [Role] @hasInverse(field: permissions)
+    accounts: [Account] @hasInverse(field: permissions)
+}

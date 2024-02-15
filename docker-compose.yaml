@@ -125,22 +125,67 @@ services:
     networks: 
       - dgraph_network
 
-  producer:
-    build: 
-      context: ./Producer  
-    networks:
-      - dgraph_network  
-    depends_on:
-      - kafka  
-      - core-alpha 
 
-  consumer:
+  ultimokafka:
     build: 
-      context: ./Consumer  
+      context: ./UltimoPipeline  
     networks:
       - dgraph_network  
     depends_on:
       - kafka  
+      - core-alpha
+
+  topdeskkafka:
+    build: 
+      context: ./TopdeskPipeline  
+    networks:
+      - dgraph_network  
+    depends_on:
+      - kafka  
+      - core-alpha
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command: 
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - dgraph_network
+
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    networks:
+      - dgraph_network
+
+  grafana:
+    image: grafana/grafana:latest
+    user: "1000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    depends_on:
+      - prometheus 
+    ports:
+      - "3000:3000"
+    networks:
+      - dgraph_network
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    command:
+      - "--kafka.server=kafka:9092"
+      - "--web.telemetry-path=/metrics" 
+    ports:
+      - "9308:9308"
+    depends_on:
+      - kafka 
+    networks:
+      - dgraph_network 
 
 networks:
   dgraph_network:

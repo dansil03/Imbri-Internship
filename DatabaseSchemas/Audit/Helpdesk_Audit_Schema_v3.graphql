@@ -1,0 +1,55 @@
+type Audit_Login_Event { 
+    id: ID! 
+    channel: Channel 
+    user: User 
+    event_time: DateTime 
+    login_type: Login_Type 
+    login_status: Login_Status
+}
+
+
+enum Login_Type { 
+    CLIENT_CREDENTIALS 
+    PASSWORD 
+}
+
+enum Login_Status { 
+    SUCCESS 
+    AUTH_FAIL 
+    CREDENTIALS_EXPIRED     
+}
+
+type Audit_Object_Change_Event { 
+    id: ID! 
+    channel: Channel 
+    user: User
+    event_type: Event_Type 
+    record_id: String 
+    attribute_name: String 
+    event_time: DateTime 
+    old_value: String 
+    new_value: String 
+}
+
+enum Event_Type { 
+    Create 
+    Read 
+    Update 
+    Delete 
+    Access
+    Print
+}
+
+enum Channel {
+    REST_BIZ 
+    REST_LOGIN 
+    API 
+    DESK_APP 
+    UNKNOWN 
+}
+
+type User { 
+    id: ID! 
+    uuid: String 
+    user_name: String 
+}
