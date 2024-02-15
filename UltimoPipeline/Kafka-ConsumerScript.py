@@ -102,9 +102,7 @@ def send_to_dgraph(nquads, dgraph_url):
     headers = {'Content-Type': 'application/rdf'}
     try:
         response = requests.post(dgraph_url, data=nquads, headers=headers)
-        logging.info(f'Successfully added: {response.text}')
     except Exception as e:
-        logging.error(f"An error occurred while sending data to Dgraph: {e}")
         traceback.print_exc()
 
 def format_value(value):
@@ -162,9 +160,9 @@ def build_nquads_data(item, config, dgraph_query_url):
 
             print(f"Verwerken van entiteit: {entity_key}")
 
-            print(f"Voor apply_mappings, item: {item}")
+        
             item = apply_mappings(item, config, entity_key)
-            print(f"Na apply_mappings, item: {item}")
+            
 
             entity_config = config["entity_definitions"][entity_key]
             unique_property = config["unique_properties"].get(entity_key)
